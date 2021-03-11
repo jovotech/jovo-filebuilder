@@ -5,7 +5,7 @@ import _set from 'lodash.set';
 import _merge from 'lodash.merge';
 
 import { FileObject, FileObjectEntry, SupportedFileFormats, SupportedFileFormatsType } from './utils';
-import { Parsers } from './parsers/Parsers';
+import * as Parser from './parsers';
 
 export class FileBuilder {
   /**
@@ -27,7 +27,7 @@ export class FileBuilder {
   }
 
   /**
-   * Normalizes an object of type FileObject. Checks for nested paths and nested properties.
+   * Normalizes an object of type FileObject. Checks for nested paths and nested properties and resolves them.
    * @param obj - The object to normalize.
    */
   static normalizeFileObject(obj: FileObject): FileObject {
@@ -38,7 +38,7 @@ export class FileBuilder {
     for (const [key, val] of Object.entries(obj)) {
       const directories: string[] = key.split('/').filter((el) => !!el);
 
-      // Key contains at least one directory.
+      // Key contains at least two directory entries.
       if (directories.length > 1 || key.endsWith('/')) {
         if (typeof val !== 'object' || Array.isArray(val)) {
           throw new Error(`Directory ${key} must contain at least one file entry.`);
@@ -48,7 +48,7 @@ export class FileBuilder {
         const directory: string = directories.shift()!;
         const fileFormat: SupportedFileFormatsType | null = this.getFileFormat(directory);
 
-        // If the directory has a file extension, aka is a file identifier,
+        // If the directory has a file extension, aka is a file identifier with a nested path,
         // don't append a "/" to the object path.
         const path: string = fileFormat ? directory : `${directory}/`;
         // Create a nested object, that will be recursively translated.
@@ -79,6 +79,7 @@ export class FileBuilder {
         if (typeof val !== 'object' || Array.isArray(val)) {
           translated[key] = val;
         } else {
+          // If the current value is an object, normalize that object first, before assigning it to the current key.
           const translatedNestedObj: FileObject = this.normalizeObject(val, {});
           translated[key] = translatedNestedObj;
         }
@@ -87,29 +88,29 @@ export class FileBuilder {
     return translated;
   }
 
-  private static parseObjectToDirectory(obj: FileObject, path: string[]) {
+  private static parseObjectToDirectory(obj: FileObject, directory: string[]) {
     for (const [key, val] of Object.entries(obj)) {
       if (key.endsWith('/')) {
         // Key is directory, recursive building.
-        this.parseObjectToDirectory(val as FileObject, [...path, key]);
+        this.parseObjectToDirectory(val as FileObject, [...directory, key]);
         continue;
       } else {
         // Turn path into an absolute path.
-        const absolutePath: string = resolvePaths(...path);
+        const absoluteDirectory: string = resolvePaths(...directory);
         const fileFormat: SupportedFileFormatsType = this.getFileFormat(key)!;
 
-        if (!existsSync(absolutePath)) {
-          mkdirSync(absolutePath, { recursive: true });
+        if (!existsSync(absoluteDirectory)) {
+          mkdirSync(absoluteDirectory, { recursive: true });
         }
 
         let file: FileObjectEntry = val;
-        const filePath: string = joinPaths(absolutePath, key);
+        const filePath: string = joinPaths(absoluteDirectory, key);
         if (existsSync(filePath) && typeof file === 'object') {
           try {
             // Parse and merge with existing file.
             const existingFileContent: string = readFileSync(filePath, 'utf-8');
 
-            const existingFile: FileObject = Parsers.decode(existingFileContent, fileFormat);
+            const existingFile: FileObject = Parser.decode(existingFileContent, fileFormat);
             _merge(existingFile, val);
             file = existingFile;
           } catch (err) {
@@ -117,7 +118,7 @@ export class FileBuilder {
           }
         }
 
-        const fileContent: string = typeof file === 'object' ? Parsers.encode(file, fileFormat) : (file as string);
+        const fileContent: string = typeof file === 'object' ? Parser.encode(file, fileFormat) : (file as string);
         writeFileSync(filePath, fileContent);
       }
     }
@@ -135,7 +136,7 @@ export class FileBuilder {
       } else {
         const fileFormat: SupportedFileFormatsType = this.getFileFormat(file)!;
         const fileContent: string = readFileSync(filePath, 'utf-8');
-        const parsedFileContent: FileObject = Parsers.decode(fileContent, fileFormat);
+        const parsedFileContent: FileObject = Parser.decode(fileContent, fileFormat);
         // Extract root folder from path, since this was the parameter and should not be included in the resulting object.
         const [, ...key] = directory;
         // Append "/" to the end of every directory key ("folder" -> "folder/").
@@ -147,17 +148,17 @@ export class FileBuilder {
     return obj;
   }
 
+  /**
+   * Returns the extension for a given file identifier.
+   * @param fileName - Name of the file to filter the extension from.
+   */
   private static getFileFormat(fileName: string): SupportedFileFormatsType | null {
     const formatRegex: RegExp = /\.([^.]+)$/;
-    const match = formatRegex.exec(fileName);
+    const match: string[] = formatRegex.exec(fileName) as string[];
 
     const fileFormat: SupportedFileFormatsType | null = match ? (match[1] as SupportedFileFormatsType) : null;
 
-    if (fileFormat && !SupportedFileFormats.includes(fileFormat)) {
-      return null;
-    }
-
     // If file format is not supported, return null.
-    return fileFormat && Object.values(SupportedFileFormats).includes(fileFormat) ? fileFormat : null;
+    return fileFormat && SupportedFileFormats.includes(fileFormat) ? fileFormat : null;
   }
 }
