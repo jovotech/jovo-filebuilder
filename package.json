@@ -1,11 +1,12 @@
 {
-  "name": "jovo-file-builder",
+  "name": "jovo-filebuilder",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",
     "test": "jest",
+    "tsc": "tsc",
     "devSetup": "npm install && npm run tsc && npm link"
   },
   "author": "",
