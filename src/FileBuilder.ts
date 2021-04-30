@@ -1,6 +1,5 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { join as joinPaths, resolve as resolvePaths } from 'path';
-import _get from 'lodash.get';
 import _set from 'lodash.set';
 import _merge from 'lodash.merge';
 

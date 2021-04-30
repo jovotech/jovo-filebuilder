@@ -4,7 +4,7 @@ export interface FileObject {
   [key: string]: FileObjectEntry;
 }
 
-export const SupportedFileFormats = ['json', 'yaml', 'txt', 'xml', 'js', 'ts'] as const;
+export const SupportedFileFormats = <const>['json', 'yaml', 'txt', 'xml', 'js', 'ts'];
 export type SupportedFileFormatsType = typeof SupportedFileFormats[number];
 
 export interface Parser {

@@ -2,8 +2,8 @@ import { FileBuilder } from '../src';
 import { FileObject } from '../src/utils';
 
 describe('FileBuilder.normalizeFileObject()', () => {
-  test('simple directory', () => {
-    const obj: FileObject = {
+  test('should not alter any properties if not nested', () => {
+    const fileObject: FileObject = {
       'directory/': {
         'file.json': {
           hello: 'world',
@@ -11,7 +11,7 @@ describe('FileBuilder.normalizeFileObject()', () => {
       },
     };
 
-    const normalized: FileObject = FileBuilder.normalizeFileObject(obj);
+    const normalized: FileObject = FileBuilder.normalizeFileObject(fileObject);
 
     expect(normalized).toStrictEqual({
       'directory/': {
@@ -23,7 +23,7 @@ describe('FileBuilder.normalizeFileObject()', () => {
   });
 
   test('nested directories', () => {
-    const obj: FileObject = {
+    const fileObject: FileObject = {
       'directory/nested/': {
         'file.json': {
           hello: 'world',
@@ -31,7 +31,7 @@ describe('FileBuilder.normalizeFileObject()', () => {
       },
     };
 
-    const normalized: FileObject = FileBuilder.normalizeFileObject(obj);
+    const normalized: FileObject = FileBuilder.normalizeFileObject(fileObject);
 
     expect(normalized).toStrictEqual({
       'directory/': {
@@ -45,7 +45,7 @@ describe('FileBuilder.normalizeFileObject()', () => {
   });
 
   test('directory with dot in name', () => {
-    const obj: FileObject = {
+    const fileObject: FileObject = {
       '.directory/': {
         'file.json': {
           hello: 'world',
@@ -53,7 +53,7 @@ describe('FileBuilder.normalizeFileObject()', () => {
       },
     };
 
-    const normalized: FileObject = FileBuilder.normalizeFileObject(obj);
+    const normalized: FileObject = FileBuilder.normalizeFileObject(fileObject);
 
     expect(normalized).toStrictEqual({
       '.directory/': {
@@ -65,13 +65,13 @@ describe('FileBuilder.normalizeFileObject()', () => {
   });
 
   test('nested directory with file', () => {
-    const obj: FileObject = {
+    const fileObject: FileObject = {
       'directory/nested/file.json': {
         hello: 'world',
       },
     };
 
-    const normalized: FileObject = FileBuilder.normalizeFileObject(obj);
+    const normalized: FileObject = FileBuilder.normalizeFileObject(fileObject);
 
     expect(normalized).toStrictEqual({
       'directory/': {
@@ -85,13 +85,13 @@ describe('FileBuilder.normalizeFileObject()', () => {
   });
 
   test('nested directory with nested properties', () => {
-    const obj: FileObject = {
+    const fileObject: FileObject = {
       'directory/file.json': {
         'hello.nested': 'world',
       },
     };
 
-    const normalized: FileObject = FileBuilder.normalizeFileObject(obj);
+    const normalized: FileObject = FileBuilder.normalizeFileObject(fileObject);
 
     expect(normalized).toStrictEqual({
       'directory/': {
@@ -105,7 +105,7 @@ describe('FileBuilder.normalizeFileObject()', () => {
   });
 
   test('nested directory with dot', () => {
-    const obj: FileObject = {
+    const fileObject: FileObject = {
       'directory/.directory/': {
         'file.json': {
           hello: 'world',
@@ -113,7 +113,7 @@ describe('FileBuilder.normalizeFileObject()', () => {
       },
     };
 
-    const normalized: FileObject = FileBuilder.normalizeFileObject(obj);
+    const normalized: FileObject = FileBuilder.normalizeFileObject(fileObject);
 
     expect(normalized).toStrictEqual({
       'directory/': {
