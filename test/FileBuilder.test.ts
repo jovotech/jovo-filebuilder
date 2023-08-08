@@ -125,4 +125,24 @@ describe('FileBuilder.normalizeFileObject()', () => {
       },
     });
   });
+
+  test('two nested with same directory', () => {
+    const fileObject: FileObject = {
+      'directory/file1.json': {
+        hello: 'world',
+      },
+      'directory/file2.json': {
+        hello: 'world',
+      },
+    };
+
+    const normalized: FileObject = FileBuilder.normalizeFileObject(fileObject);
+
+    expect(normalized).toStrictEqual({
+      'directory/': {
+        'file1.json': { hello: 'world' },
+        'file2.json': { hello: 'world' },
+      },
+    });
+  });
 });

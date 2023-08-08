@@ -62,7 +62,8 @@ export class FileBuilder {
         // Recursively parse the nested object and set the now translated object
         // as the value to the current directory.
         const translatedNestedObj: FileObject = this.normalizeObject(nestedObj, {});
-        translated[path] = translatedNestedObj;
+        const merged = _merge({}, translated[path], translatedNestedObj);
+        translated[path] = merged;
       } else {
         // Key is either of format "file.json" or nested property, such as foo.bar.
         // Try to get file format.
