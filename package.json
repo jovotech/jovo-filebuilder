@@ -1,7 +1,7 @@
 {
   "name": "@jovotech/filebuilder",
   "description": "Jovo FileBuilder",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "jovotech",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
